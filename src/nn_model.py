@@ -77,10 +77,10 @@ def train(xtrainp, ytrainp, xvalp, yvalp,
     plt.show()
     
     #Evaluate model on training data
-    t_loss, t_accuracy = model.evaluate(xtrain, ytrain)
+    t_loss, t_accuracy = model.evaluate(xtrain, ytrain, verbose = 0)
     print(f'Training Accuracy: {t_accuracy*100}')
     
-    v_loss, v_accuracy = model.evaluate(xval, yval)
+    v_loss, v_accuracy = model.evaluate(xval, yval, verbose = 0)
     print(f'Validation Accuracy: {v_accuracy*100}')
     
     #Collect the training labels, predictions, and correctness and output to train analysis
@@ -133,7 +133,7 @@ def test(xtest, ytest, test_analysis = './../train_analysis.csv',
     
     #Compile Model
     loaded_model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
-    loss, accuracy = loaded_model.evaluate(xtest, ytest)
+    loss, accuracy = loaded_model.evaluate(xtest, ytest, verbose = 0)
     print('Testing Accuracy: %.2f' % (accuracy*100))
     
     #Collect the testing labels, predictions, and correctness and output to train analysis
