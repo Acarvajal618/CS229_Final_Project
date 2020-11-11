@@ -1,8 +1,8 @@
 # CS229_Final_Project
 CS229 Final project: Seismic Signal Detector
 
-The following is the directory structure:
 
+DIRECTORY STRUCTURE:
 Project
 |
 |-> analysis
@@ -32,3 +32,14 @@ Project
 |-> original main
     |
     |-> main.py (baseline experiment file)
+
+The idea is we'll be running experiments in individual experiment folders in the analysis folder in order to preserve repro-ability
+So there is a baseline experiment folder (T0_base) that we copy from to make new experiment folders.
+From the experiment folder we'll run loops and sub experiments to test HP and tuning.
+The main files in each experiment folder will pull from the data directory for train/test/val data.
+All the functions called by main are in the src directory.
+The 'main' files in each experiment will be different per experiment but if we wanted a baseline 'main.py'
+then there's one saved in the original main directory.
+
+The hdf5 files would all be in the data directory, theyre not included in the repo due to size. 
+
