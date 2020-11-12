@@ -24,24 +24,24 @@ earthquake_files = [ ["./../../data/raw_data/chunk2.csv", "./../../data/raw_data
 # test_data = exp_folder +'test_data_12.csv'
 # test_labels = exp_folder +'test_labels_12.csv'
 
-N_noise = .025
-N_earthquake = .025
-exp_folder = './../../data/e0_025/'
+N_noise = .1
+N_earthquake = .1
+exp_folder = './../../data_testing/'
 
 #Preprocessing names
-filtered_csv = exp_folder + 'filtered_12.csv'
-filtered_hdf5 = exp_folder + 'filtered_12.hdf5'
-K_split = [.8,.1,.1]
+# filtered_csv = exp_folder + 'filtered_12.csv'
+# filtered_hdf5 = exp_folder + 'filtered_12.hdf5'
+# K_split = [.8,.1,.1]
 
-train_csv_path = exp_folder + 'train.csv'
-train_hdf5_path = exp_folder + 'train.hdf5'
+# train_csv_path = exp_folder + 'train.csv'
+# train_hdf5_path = exp_folder + 'train.hdf5'
 
-val_csv_path = exp_folder + 'val.csv'
-val_hdf5_path = exp_folder + 'val.hdf5'
+# val_csv_path = exp_folder + 'val.csv'
+# val_hdf5_path = exp_folder + 'val.hdf5'
 
-test_csv_path = exp_folder + 'test.csv'
-test_hdf5_path = exp_folder + 'test.hdf5'
-transform_method = 'identity'
+# test_csv_path = exp_folder + 'test.csv'
+# test_hdf5_path = exp_folder + 'test.hdf5'
+# transform_method = 'identity'
 
 #Paths for training set/labels
 xtrain = exp_folder + 'xtrain.csv'
@@ -59,16 +59,14 @@ train_analysis = './results/train_analysis.csv'
 val_analysis = './results/val_analysis.csv'
 test_analysis = './results/test_analysis.csv'
 
-model_arch = './model/model.json'
-model_weights = './model/model.h5'
-model_hp = './model/model_hp.txt'
+model_dir = './model/'
 
-shape = [256,256]
+shape = [10,10]
 l2_reg = 0
-epochs = 500
+epochs = 10
 activation_function = 'relu'
-batch_size = 64
-learning_rate = .001
+batch_size = 10
+learning_rate = .01
 
 def main():
     
@@ -101,16 +99,14 @@ def main():
                 learning_rate,
                 train_analysis,
                 val_analysis,
-                model_arch,
-                model_weights,
-                model_hp)
+                model_dir,
+                'testing')
     
     ##Use the saved h5 file to predict with the model
     nnm.test(xtest,
               ytest, 
               test_analysis,
-              model_arch, 
-              model_weights)
+              model_dir)
     
     # postp.error_analysis(predictions, test_labels, error_stats)
     

@@ -24,8 +24,8 @@ earthquake_files = [ ["./../../data/raw_data/chunk2.csv", "./../../data/raw_data
 # test_data = exp_folder +'test_data_12.csv'
 # test_labels = exp_folder +'test_labels_12.csv'
 
-N_noise = .025
-N_earthquake = .025
+N_noise = .1
+N_earthquake = .1
 exp_folder = './../../data_testing/'
 
 #Preprocessing names
