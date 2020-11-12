@@ -17,8 +17,7 @@ from tensorflow.keras.models import model_from_json
 def train(xtrainp, ytrainp, xvalp, yvalp, 
           shape = [], af = 'relu', l2_reg = 0, epochs = 150, bs = 10, lr = .001, 
           train_analysis = './../train_analysis.csv',val_analysis = './../val_analysis.csv',
-          model_arch = './model/model.json', model_weights = './model/model.h5',
-          model_hp = './model/model_hp.txt'):
+          model_dir = './model/', tag = ''):
     '''
     Train a model and save off model architecture and weights
     '''
@@ -68,13 +67,15 @@ def train(xtrainp, ytrainp, xvalp, yvalp,
                         epochs=epochs , batch_size=bs)
     
     #Plot train and val curves
+    fig = plt.figure(figsize = (12,10))
     plt.plot(history.history['accuracy'])
     plt.plot(history.history['val_accuracy'])
-    plt.title('model accuracy')
+    plt.title(f'model accuracy: {tag}')
     plt.ylabel('accuracy')
     plt.xlabel('epoch')
     plt.legend(['train', 'val'], loc='upper left')
     plt.show()
+    fig.savefig(model_dir + 'model_curve.png', dpi=fig.dpi)
     
     #Evaluate model on training data
     t_loss, t_accuracy = model.evaluate(xtrain, ytrain, verbose = 0)
@@ -97,14 +98,14 @@ def train(xtrainp, ytrainp, xvalp, yvalp,
 
     #Output/Save away the Model Arch
     model_json = model.to_json()
-    with open(model_arch, "w") as json_file:
+    with open(model_dir + 'model.json', "w") as json_file:
         json_file.write(model_json)
     
     #Save Model weights
-    model.save_weights(model_weights)
+    model.save_weights(model_dir + 'model.h5')
     
     #Note down hyperparameters used in the training
-    with open(model_hp, 'w') as hp:
+    with open(model_dir + 'model_hp.txt', 'w') as hp:
         for p,a in arg_list:
             hp.writelines(f'{p} : {a}\n')
             
@@ -112,7 +113,7 @@ def train(xtrainp, ytrainp, xvalp, yvalp,
  
 @debugprint
 def test(xtest, ytest, test_analysis = './../train_analysis.csv',
-          model_arch = './model/model.json', model_weights = './model/model.h5'):
+          model_dir = './model/'):
     '''
     Use an existing Model architecture and weights to execute Inference
     '''
@@ -126,10 +127,10 @@ def test(xtest, ytest, test_analysis = './../train_analysis.csv',
     ytest = np.array(ytest)
     
     #Load up model via json
-    loaded_model = tf.keras.models.model_from_json(open(model_arch, 'r').read())
+    loaded_model = tf.keras.models.model_from_json(open(model_dir + 'model.json', 'r').read())
     
     #load weights into new model via h5
-    loaded_model.load_weights(model_weights)
+    loaded_model.load_weights(model_dir + 'model.h5')
     
     #Compile Model
     loaded_model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])

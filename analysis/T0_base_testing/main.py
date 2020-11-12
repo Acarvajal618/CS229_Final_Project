@@ -59,13 +59,11 @@ train_analysis = './results/train_analysis.csv'
 val_analysis = './results/val_analysis.csv'
 test_analysis = './results/test_analysis.csv'
 
-model_arch = './model/model.json'
-model_weights = './model/model.h5'
-model_hp = './model/model_hp.txt'
+model_dir = './model/'
 
 shape = [10,10]
 l2_reg = 0
-epochs = 100
+epochs = 10
 activation_function = 'relu'
 batch_size = 10
 learning_rate = .01
@@ -101,16 +99,14 @@ def main():
                 learning_rate,
                 train_analysis,
                 val_analysis,
-                model_arch,
-                model_weights,
-                model_hp)
+                model_dir,
+                'testing')
     
     ##Use the saved h5 file to predict with the model
     nnm.test(xtest,
               ytest, 
               test_analysis,
-              model_arch, 
-              model_weights)
+              model_dir)
     
     # postp.error_analysis(predictions, test_labels, error_stats)
     
