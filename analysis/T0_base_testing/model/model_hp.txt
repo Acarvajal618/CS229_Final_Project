@@ -1,0 +1,15 @@
+xtrainp : ./../../data_testing/xtrain.csv
+ytrainp : ./../../data_testing/ytrain.csv
+xvalp : ./../../data_testing/xval.csv
+yvalp : ./../../data_testing/yval.csv
+shape : [10, 10]
+af : relu
+l2_reg : 0
+epochs : 100
+bs : 10
+lr : 0.01
+train_analysis : ./results/train_analysis.csv
+val_analysis : ./results/val_analysis.csv
+model_arch : ./model/model.json
+model_weights : ./model/model.h5
+model_hp : ./model/model_hp.txt
