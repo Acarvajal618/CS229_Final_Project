@@ -29,9 +29,9 @@ N_earthquake = .025
 exp_folder = './../../data/e0_025/'
 
 #Preprocessing names
-filtered_csv = exp_folder + 'filtered_12.csv'
-filtered_hdf5 = exp_folder + 'filtered_12.hdf5'
-K_split = [.8,.1,.1]
+# filtered_csv = exp_folder + 'filtered_12.csv'
+# filtered_hdf5 = exp_folder + 'filtered_12.hdf5'
+# K_split = [.8,.1,.1]
 
 train_csv_path = exp_folder + 'train.csv'
 train_hdf5_path = exp_folder + 'train.hdf5'
@@ -59,16 +59,14 @@ train_analysis = './results/train_analysis.csv'
 val_analysis = './results/val_analysis.csv'
 test_analysis = './results/test_analysis.csv'
 
-model_arch = './model/model.json'
-model_weights = './model/model.h5'
-model_hp = './model/model_hp.txt'
+model_dir = './model/'
 
-shape = [256,256]
+shape = [10,10]
 l2_reg = 0
-epochs = 500
+epochs = 10
 activation_function = 'relu'
-batch_size = 64
-learning_rate = .001
+batch_size = 10
+learning_rate = .01
 
 def main():
     
@@ -84,33 +82,31 @@ def main():
     #             test_csv_path, test_hdf5_path)
     
     #Transform the training and test data
-    # prep.transform_data_pd( train_csv_path, train_hdf5_path, xtrain, ytrain, method = transform_method)
-    # prep.transform_data_pd( val_csv_path, val_hdf5_path, xval, yval, method = transform_method)
-    # prep.transform_data_pd( test_csv_path, test_hdf5_path, xtest, ytest, method = transform_method)
+    prep.transform_data_pd( train_csv_path, train_hdf5_path, xtrain, ytrain, method = transform_method)
+    prep.transform_data_pd( val_csv_path, val_hdf5_path, xval, yval, method = transform_method)
+    prep.transform_data_pd( test_csv_path, test_hdf5_path, xtest, ytest, method = transform_method)
     
     ##Use the training data to fit the weights of the model
-    nnm.train(  xtrain,
-                ytrain,
-                xval,
-                yval,
-                shape,
-                activation_function,
-                l2_reg,
-                epochs,
-                batch_size,
-                learning_rate,
-                train_analysis,
-                val_analysis,
-                model_arch,
-                model_weights,
-                model_hp)
+    # nnm.train(  xtrain,
+    #             ytrain,
+    #             xval,
+    #             yval,
+    #             shape,
+    #             activation_function,
+    #             l2_reg,
+    #             epochs,
+    #             batch_size,
+    #             learning_rate,
+    #             train_analysis,
+    #             val_analysis,
+    #             model_dir,
+    #             'testing')
     
-    ##Use the saved h5 file to predict with the model
-    nnm.test(xtest,
-              ytest, 
-              test_analysis,
-              model_arch, 
-              model_weights)
+    # ##Use the saved h5 file to predict with the model
+    # nnm.test(xtest,
+    #           ytest, 
+    #           test_analysis,
+    #           model_dir)
     
     # postp.error_analysis(predictions, test_labels, error_stats)
     

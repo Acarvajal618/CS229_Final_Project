@@ -109,6 +109,9 @@ def train(xtrainp, ytrainp, xvalp, yvalp,
         for p,a in arg_list:
             hp.writelines(f'{p} : {a}\n')
             
+        hp.writelines(f'tag : {tag}')
+        hp.writelines(f'Training accuracy : {t_accuracy*100}')    
+        hp.writelines(f'Validation accuracy : {v_accuracy*100}')
     print('Saved Model Weights/Architecture')
  
 @debugprint

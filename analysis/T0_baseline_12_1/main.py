@@ -59,13 +59,11 @@ train_analysis = './results/train_analysis.csv'
 val_analysis = './results/val_analysis.csv'
 test_analysis = './results/test_analysis.csv'
 
-model_arch = './model/model.json'
-model_weights = './model/model.h5'
-model_hp = './model/model_hp.txt'
+model_dir = './model/'
 
 shape = [32,32]
 l2_reg = 0
-epochs = 500
+epochs = 5
 activation_function = 'relu'
 batch_size = 64
 learning_rate = .001
@@ -84,9 +82,9 @@ def main():
     #             test_csv_path, test_hdf5_path)
     
     # #Transform the training and test data
-    prep.transform_data_pd( train_csv_path, train_hdf5_path, xtrain, ytrain, method = transform_method)
-    prep.transform_data_pd( val_csv_path, val_hdf5_path, xval, yval, method = transform_method)
-    prep.transform_data_pd( test_csv_path, test_hdf5_path, xtest, ytest, method = transform_method)
+    # prep.transform_data_pd( train_csv_path, train_hdf5_path, xtrain, ytrain, method = transform_method)
+    # prep.transform_data_pd( val_csv_path, val_hdf5_path, xval, yval, method = transform_method)
+    # prep.transform_data_pd( test_csv_path, test_hdf5_path, xtest, ytest, method = transform_method)
     
     ##Use the training data to fit the weights of the model
     nnm.train(  xtrain,
@@ -101,16 +99,13 @@ def main():
                 learning_rate,
                 train_analysis,
                 val_analysis,
-                model_arch,
-                model_weights,
-                model_hp)
+                model_dir)
     
     ##Use the saved h5 file to predict with the model
     # nnm.test(xtest,
     #           ytest, 
     #           test_analysis,
-    #           model_arch, 
-    #           model_weights)
+    #           model_dir)
     
     # postp.error_analysis(predictions, test_labels, error_stats)
     
