@@ -11,6 +11,13 @@ from skimage.measure import block_reduce
 # import python_speech_features
 import os
 from datetime import datetime
+import multiprocessing as mp
+from itertools import cycle
+from functools import partial
+import threading
+## GLOBALS
+hdf5_file_path = ''
+HDF_LOCK = threading.Lock()
 
 @debugprint
 def filter_merge_dataset(noise_paths, earthquake_paths, N_eq, N_noise, output_filtered_csv_path, output_filtered_hdf5_path):
@@ -128,6 +135,17 @@ def split(filtered_csv_path, filtered_hdf5_path, K_split,
     print(f'No. of EQ in val set: {eq_in_val}')
     print(f'No. of Noise in val set: {noise_in_val}')
     
+    
+
+#Function used to parallelize reading from h5 and appending to csv    
+def parallel_function(hdf5_file_path, transform_function, data_path, labels_path, trace, data_label):
+
+    with h5py.File(hdf5_file_path, 'r') as h5_data:
+        data = np.array( h5_data.get('data/' + str(trace)) )
+        transformed_data = transform_function(data)
+        pd.DataFrame(data = [transformed_data]).to_csv(data_path, mode = 'a', header = False, index = False)
+        pd.DataFrame( data = np.array([[data_label]])).to_csv(labels_path, mode = 'a', header = False, index = False)
+        
 @debugprint    
 def transform_data_pd(csv_file_path, hdf5_file_path , data_path, labels_path, method = None):
     '''
@@ -135,11 +153,15 @@ def transform_data_pd(csv_file_path, hdf5_file_path , data_path, labels_path, me
     Continuously output to csv files as the data gets transformed so rate doesnt slow down
     '''
     
+    #If data csvs exits, delete them to start from scratch because processing will append
     try:
         os.remove(data_path)
         os.remove(labels_path)
     except OSError:
         pass
+    
+    #Enable use of all cores
+    pool = mp.Pool(mp.cpu_count())
     
     supported_methods = ['mean', 'three_channel_mean', 'mfcc', 'identity']
     if method in supported_methods: 
@@ -147,33 +169,35 @@ def transform_data_pd(csv_file_path, hdf5_file_path , data_path, labels_path, me
     else:
         assert False, "Mode not supported"
     
+    if method == 'mean':
+        transformed_function = mean_transform
+    elif method == 'three_channel_mean':
+        transformed_function = three_channel_mean_transform
+    elif method == 'mfcc':
+        transformed_function = mfcc
+    elif method == 'identity':
+        transformed_function = identity
+
     df_metadata = pd.read_csv(csv_file_path)
     df_metadata = df_metadata.sample(frac = 1)
     trace_list = df_metadata['trace_name'].to_list()
+    data_labels =  [int(df_metadata[df_metadata['trace_name'] == trace]['trace_category'].iloc[0] == 'earthquake_local') for trace in trace_list] 
 
-    with h5py.File(hdf5_file_path, 'r') as h5_data:
-        data_arr = np.array([])
-        label_arr = np.array([])
+    ##Parallelize the data processing        
+    pool.starmap(partial(parallel_function, hdf5_file_path, transformed_function, data_path ,labels_path), 
+                 zip(trace_list, data_labels))
         
-        for i, trace in enumerate(trace_list):
-            dataset = h5_data.get('data/' + str(trace))
-            data = np.array(dataset)
-            if method == 'mean':
-                transformed_data = mean_transform(data)
-            elif method == 'three_channel_mean':
-                transformed_data = three_channel_mean_transform(data)
-            elif method == 'mfcc':
-                transformed_data = mfcc(data)
-            elif method == 'identity':
-                transformed_data = identity(data)
-            data_label = int(df_metadata[df_metadata['trace_name'] == trace]['trace_category'].iloc[0] == 'earthquake_local')
-            if (i % 1000) == 0: print(i, datetime.now().strftime("%H:%M:%S"))
-            # print(i)
-            pd.DataFrame(data = [transformed_data]).to_csv(data_path, mode = 'a', header = False, index = False)
-            pd.DataFrame( data = np.array([[data_label]])).to_csv(labels_path, mode = 'a', header = False, index = False)
+        # for i, trace in enumerate(trace_list):
+        #     dataset = h5_data.get('data/' + str(trace))
+        #     data = np.array(dataset)
+        #     data_label = int(df_metadata[df_metadata['trace_name'] == trace]['trace_category'].iloc[0] == 'earthquake_local')
+        #     if (i % 1000) == 0: print(i, datetime.now().strftime("%H:%M:%S"))
+        #     transformed_data = transform_function(data)
+        #     pd.DataFrame(data = [transformed_data]).to_csv(data_path, mode = 'a', header = False, index = False)
+        #     pd.DataFrame( data = np.array([[data_label]])).to_csv(labels_path, mode = 'a', header = False, index = False)
             
     #Print relevant information
-    print(f'shape of data array: {i, transformed_data.shape[0]}')
+    print(f'len of data array: { len(trace_list)}')
     
 def mean_transform(arr):
     return np.mean(arr, axis=0)
