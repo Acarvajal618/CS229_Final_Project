@@ -3,6 +3,8 @@ import h5py
 import sys
 sys.path.insert(1, './../../src/')
 from util import *
+import os
+import shutil
 
 import tensorflow as tf
 import pandas as pd
@@ -16,11 +18,19 @@ from tensorflow.keras.models import model_from_json
 @debugprint
 def train(xtrainp, ytrainp, xvalp, yvalp, 
           shape = [], af = 'relu', l2_reg = 0, epochs = 150, bs = 10, lr = .001, 
-          train_analysis = './../train_analysis.csv',val_analysis = './../val_analysis.csv',
+          train_analysis = 'train_analysis.csv', train_trace = '',
+          val_analysis = 'val_analysis.csv', val_trace = '',
           model_dir = './model/', tag = ''):
     '''
     Train a model and save off model architecture and weights
     '''
+    #if model path exists, delete it
+    if os.path.exists(model_dir):
+        shutil.rmtree( model_dir )
+        os.mkdir( model_dir )
+    else: #Else make the path
+        os.mkdir( model_dir )
+    
     #Preserve the arg list somewhere to note it down at the end of the function
     arg_list = [[k,v] for k,v in locals().items()]
     
@@ -87,14 +97,18 @@ def train(xtrainp, ytrainp, xvalp, yvalp,
     #Collect the training labels, predictions, and correctness and output to train analysis
     predictions = model.predict(xtrain)
     correct = [ y_gt == round(y_pred[0])  for y_gt, y_pred in zip(ytrain, predictions) ]
-    t_analysys =  [ [y_gt[0],round(y_pred[0]), int(c)]  for y_gt, y_pred, c in zip(ytrain, predictions, correct)]
-    pd.DataFrame(t_analysys, columns = ['Ground_Truth', 'Predicted', 'Correct']).to_csv(train_analysis, index = False )
+    t_analysis =  [ [y_gt[0],round(y_pred[0]), int(c)]  for y_gt, y_pred, c in zip(ytrain, predictions, correct)]
+    t_analysis = pd.DataFrame(t_analysis, columns = ['Ground_Truth', 'Predicted', 'Correct'])
+    t_analysis['trace_name'] = pd.read_csv(train_trace)['trace_name']
+    t_analysis.to_csv(model_dir + train_analysis, index = False )
     
     #Collect the training labels, predictions, and correctness and output to val analysis
     predictions = model.predict(xval)
     correct = [ y_gt == round(y_pred[0])  for y_gt, y_pred in zip(yval, predictions) ]
-    v_analysys =  [ [y_gt[0],round(y_pred[0]), int(c)]  for y_gt, y_pred, c in zip(yval, predictions, correct)]
-    pd.DataFrame(v_analysys, columns = ['Ground_Truth', 'Predicted', 'Correct']).to_csv(val_analysis, index = False )
+    v_analysis =  [ [y_gt[0],round(y_pred[0]), int(c)]  for y_gt, y_pred, c in zip(yval, predictions, correct)]
+    v_analysis = pd.DataFrame(v_analysis, columns = ['Ground_Truth', 'Predicted', 'Correct'])
+    v_analysis['trace_name'] = pd.read_csv(val_trace)['trace_name']
+    v_analysis.to_csv(model_dir + val_analysis, index = False )
 
     #Output/Save away the Model Arch
     model_json = model.to_json()
@@ -108,14 +122,13 @@ def train(xtrainp, ytrainp, xvalp, yvalp,
     with open(model_dir + 'model_hp.txt', 'w') as hp:
         for p,a in arg_list:
             hp.writelines(f'{p} : {a}\n')
-            
-        hp.writelines(f'tag : {tag}')
-        hp.writelines(f'Training accuracy : {t_accuracy*100}')    
-        hp.writelines(f'Validation accuracy : {v_accuracy*100}')
+        hp.writelines(f'Training accuracy : {t_accuracy*100}\n')    
+        hp.writelines(f'Validation accuracy : {v_accuracy*100}\n')
     print('Saved Model Weights/Architecture')
  
 @debugprint
-def test(xtest, ytest, test_analysis = './../train_analysis.csv',
+def test(xtest, ytest, 
+         test_analysis = 'test_analysis.csv', test_trace = '',
           model_dir = './model/'):
     '''
     Use an existing Model architecture and weights to execute Inference
@@ -144,8 +157,9 @@ def test(xtest, ytest, test_analysis = './../train_analysis.csv',
     predictions = loaded_model.predict(xtest)
     correct = [ y_gt == round(y_pred[0])  for y_gt, y_pred in zip(ytest, predictions) ]
     t_analysis =  [ [y_gt[0],round(y_pred[0]), int(c)]  for y_gt, y_pred, c in zip(ytest, predictions, correct)]
-    pd.DataFrame(t_analysis, columns = ['Ground_Truth', 'Predicted', 'Correct']).to_csv(test_analysis, index = False )
-    
+    t_analysis = pd.DataFrame(t_analysis, columns = ['Ground_Truth', 'Predicted', 'Correct'])
+    t_analysis['trace_name'] = pd.read_csv(test_trace)['trace_name']
+    t_analysis.to_csv(model_dir + test_analysis, index = False )
     
     
 

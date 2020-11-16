@@ -34,12 +34,15 @@ filtered_hdf5 = exp_folder + 'filtered_12.hdf5'
 K_split = [.8,.1,.1]
 
 train_csv_path = exp_folder + 'train.csv'
+train_trace = train_csv_path
 train_hdf5_path = exp_folder + 'train.hdf5'
 
 val_csv_path = exp_folder + 'val.csv'
+val_trace = val_csv_path
 val_hdf5_path = exp_folder + 'val.hdf5'
 
 test_csv_path = exp_folder + 'test.csv'
+test_trace =test_csv_path
 test_hdf5_path = exp_folder + 'test.hdf5'
 transform_method = 'identity'
 
@@ -55,9 +58,9 @@ yval = exp_folder + 'yval.csv'
 xtest = exp_folder + 'xtest.csv'
 ytest = exp_folder + 'ytest.csv'
 
-train_analysis = './results/train_analysis.csv'
-val_analysis = './results/val_analysis.csv'
-test_analysis = './results/test_analysis.csv'
+train_analysis = 'train_analysis.csv'
+val_analysis = 'val_analysis.csv'
+test_analysis = 'test_analysis.csv'
 
 model_dir = './model/'
 
@@ -98,14 +101,18 @@ def main():
                 batch_size,
                 learning_rate,
                 train_analysis,
+                train_trace,
                 val_analysis,
-                model_dir)
+                val_trace,
+                model_dir,
+                'testing')
     
     ##Use the saved h5 file to predict with the model
-    # nnm.test(xtest,
-    #           ytest, 
-    #           test_analysis,
-    #           model_dir)
+    nnm.test(xtest,
+              ytest, 
+              test_analysis,
+              test_trace,
+              model_dir)
     
     # postp.error_analysis(predictions, test_labels, error_stats)
     
