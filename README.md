@@ -20,7 +20,6 @@ Project
 |        |-> test_analysis (test set labels/ our predictions/ if we were correct)  
 |        |-> train_analysis (train set labels/ our predictions/ if we were correct)  
 |        |-> val_analysis (val set labels/ our predictions/ if we were correct)  
-|
 |-> data  
 |  |  
 |  |-> {dataset_Name}  
