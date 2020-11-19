@@ -15,9 +15,8 @@ import multiprocessing as mp
 from itertools import cycle
 from functools import partial
 import threading
-## GLOBALS
-hdf5_file_path = ''
-HDF_LOCK = threading.Lock()
+
+
 
 @debugprint
 def filter_merge_dataset(noise_paths, earthquake_paths, N_eq, N_noise, output_filtered_csv_path, output_filtered_hdf5_path):
@@ -139,12 +138,24 @@ def split(filtered_csv_path, filtered_hdf5_path, K_split,
 
 #Function used to parallelize reading from h5 and appending to csv    
 def parallel_function(hdf5_file_path, transform_function, data_path, labels_path, trace, data_label):
-
+    
     with h5py.File(hdf5_file_path, 'r') as h5_data:
+        
+        #Pull the data from the h5 and transform it
         data = np.array( h5_data.get('data/' + str(trace)) )
         transformed_data = transform_function(data)
-        pd.DataFrame(data = [transformed_data]).to_csv(data_path, mode = 'a', header = False, index = False)
-        pd.DataFrame( data = np.array([[data_label]])).to_csv(labels_path, mode = 'a', header = False, index = False)
+        
+        #Changing lock code, instead of writing to two files, write to one.
+        #This has been tested to not screw up sync
+        #As a result, we need to split the data label from the transformed data before training
+        pd.DataFrame(data = [ np.append(transformed_data, data_label)]).to_csv(data_path, mode = 'a', header = False, index = False)
+
+#Function used to split the parallelized dump of the prep files. Will split the data and label
+def split_prep(prep_csv, x_prep, y_prep):
+    df = pd.read_csv(prep_csv, header = 0)
+    df[df.columns[-1]].to_csv(y_prep, header = None, index = False)
+    df[df.columns[:-1]].to_csv(x_prep, header = None, index = False)
+    return
         
 @debugprint    
 def transform_data_pd(csv_file_path, hdf5_file_path , data_path, labels_path, method = None):
@@ -163,12 +174,14 @@ def transform_data_pd(csv_file_path, hdf5_file_path , data_path, labels_path, me
     #Enable use of all cores
     pool = mp.Pool(mp.cpu_count())
     
-    supported_methods = ['mean', 'three_channel_mean', 'mfcc', 'identity']
+    #Assert if unsupported method provided
+    supported_methods = ['mean', 'three_channel_mean', 'mfcc', 'identity', 'dft']
     if method in supported_methods: 
         print(f'Data transformation selected: {method} ')
     else:
         assert False, "Mode not supported"
     
+    #Select proper function depending on method specified
     if method == 'mean':
         transformed_function = mean_transform
     elif method == 'three_channel_mean':
@@ -177,9 +190,11 @@ def transform_data_pd(csv_file_path, hdf5_file_path , data_path, labels_path, me
         transformed_function = mfcc
     elif method == 'identity':
         transformed_function = identity
+    elif method == 'dft':
+        transformed_function = dft
 
+    #Prep the data for parallel workers
     df_metadata = pd.read_csv(csv_file_path)
-    df_metadata = df_metadata.sample(frac = 1)
     trace_list = df_metadata['trace_name'].to_list()
     data_labels =  [int(df_metadata[df_metadata['trace_name'] == trace]['trace_category'].iloc[0] == 'earthquake_local') for trace in trace_list] 
 
@@ -209,14 +224,21 @@ def mfcc(arr):
     transform = python_speech_features.mfcc(arr, samplerate=100, winlen = 5, winstep = 5, numcep=10,nfilt=10,nfft=512)
     return transform.flatten()
 
-def identity(arr): #return (18000,)
+def identity(arr): #return (1800,)
     out = np.concatenate((
             block_reduce(arr.T[0], block_size=(10,), func=np.mean),
             block_reduce(arr.T[1], block_size=(10,), func=np.mean),
             block_reduce(arr.T[2], block_size=(10,), func=np.mean)
             ))
     return out
-    
+   
+def dft(arr):
+    out = np.concatenate((
+            np.abs( np.fft.rfft(arr.T[0], n =512)),
+            np.abs( np.fft.rfft(arr.T[1], n =512)),
+            np.abs( np.fft.rfft(arr.T[2], n =512)) 
+            ))
+    return out 
     
     
 
